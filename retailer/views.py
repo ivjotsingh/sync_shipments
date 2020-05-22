@@ -36,7 +36,7 @@ class ShopCredentials(APIView):
             if access_token:
                 shop = Shop.objects.create(name=name, client_id=client_id, client_secret=client_secret,
                                            access_token=access_token)
-                sync_all_shipments(access_token=access_token)
+                sync_all_shipments(access_token=shop.access_token)
                 return Response({"message": "shop credentials registered and shipments will be synced"},
                                 status=status.HTTP_200_OK)
             else:
