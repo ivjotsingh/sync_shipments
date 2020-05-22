@@ -22,7 +22,7 @@ class ShopCredentials(APIView):
             client_id = str(request.data.get('client_id', None))
             if Shop.objects.filter(client_id=client_id).exists():
                 # todo [IV] made status messages as constants
-                return Response({"message": "client_id and client_secret for registering as a retailer"},
+                return Response({"message": "shop already registered for this client_id"},
                                 status=status.HTTP_400_BAD_REQUEST)
 
             client_secret = request.data.get('client_secret', None)
