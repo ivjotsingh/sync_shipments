@@ -1,0 +1,17 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+
+[packages]
+djangorestframework = "==3.11.0"
+django-extensions = "==2.2.9"
+django-jsonfield = "==1.4.0"
+requests = "==2.23.0"
+ipython = "==7.14.0"
+pipenv = "==2018.11.26"
+
+[requires]
+python_version = "3.6"
