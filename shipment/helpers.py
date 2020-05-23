@@ -15,12 +15,12 @@ def sync_all_shipments(access_token):
 
 
 def sync_shipment_by_id(shop, shipment_id=750036379):
-    while True:
-        sync = False
+    for _ in range(2):
         try:
             if Shipment.objects.filter(shipment_id=shipment_id).exists():
-                sync = True
-                return sync
+                print("already")
+                break
+
             shipment_url = f"https://api.bol.com/retailer/shipments/{shipment_id}"
             headers = {
                 "Authorization": f"Bearer {shop.access_token}",
@@ -28,23 +28,27 @@ def sync_shipment_by_id(shop, shipment_id=750036379):
             }
 
             response = requests.get(shipment_url, headers=headers)
-            print(response)
-            print(vars(response))
             response_data = json.loads(response._content)
-            print(response_data['title'])
-            print()
-            # todo [add 2 attempts]
-            if response_data['title'] == 'Expired JWT' and response_data['status'] == 401:
-                print("coming here baby")
+
+            if response_data.get('title', '') == 'Expired JWT' and response_data.get('status') == 401:
                 refresh_access_token(shop=shop)
-                continue
+
+            elif response_data.get('status') == 429:
+                time.sleep(60)
             else:
-                sync = True
+                shipment = Shipment.objects.create(shipment_id=response_data['shipmentId'],
+                                                   pick_up_point=response_data['pickUpPoint'],
+                                                   shipment_date=response_data['shipmentDate'],
+                                                   shipment_reference=response_data['shipmentReference'],
+                                                   shipment_items=response_data['shipmentItems'],
+                                                   transport=response_data['transport'],
+                                                   customer_details=response_data['customerDetails'],
+                                                   billing_details=response_data['billingDetails'],
+                                                   shop=shop,
+                                                   fulfilment_method=response_data['shipmentItems'][0]
+                                                   ['fulfilmentMethod'])
+                break
 
         except Exception as e:
-            if Exception == '429':
-                time.sleep(60)
-            elif Exception == 'token Exception':
-                refresh_access_token(shop=shop)
-        if sync:
-            break
+            # todo [IV] log exception
+            print(e)
