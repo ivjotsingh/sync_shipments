@@ -104,7 +104,7 @@ class ShipmentSync:
 
                     if response_data.get('title', '') == 'Expired JWT' and response_data.get('status') == 401:
                         refresh_access_token(shop=self.shop)
-                        break
+                        continue
 
                     elif response_data.get('status') == 429:
                         print("sleeping in sync all shipments for 60 seconds")

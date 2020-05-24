@@ -18,6 +18,8 @@ def pdf_process_function(msg):
     shop_id = json.loads(msg)['shop_id']
     sync = ShipmentSync(Shop.objects.get(id=shop_id))
     sync.sync_all_shipments()
+    sync = ShipmentSync(Shop.objects.get(id=shop_id))
+    sync.sync_all_shipments()
     print(" PDF processing finished")
     return
 
