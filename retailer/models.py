@@ -1,6 +1,17 @@
 import uuid
 from django.db import models
 from django_extensions.db.models import TimeStampedModel
+from django.contrib.auth.models import AbstractUser
+
+
+class BolooUser(AbstractUser):
+    shop = models.ForeignKey("retailer.Shop", on_delete=models.CASCADE, null=True)
+
+    def __str__(self):
+        return self.username
+
+    class Meta:
+        db_table = 'boloo_user'
 
 
 class Shop(TimeStampedModel):

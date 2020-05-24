@@ -2,17 +2,18 @@ from shipment.paginator import ShipmentListPagination
 from shipment.serializers import ShipmentSerializer
 from shipment.models import Shipment
 from rest_framework import viewsets
-# Create your views here.
+from rest_framework.authentication import TokenAuthentication
 
 
 class ShipmentView(viewsets.ReadOnlyModelViewSet):
     pagination_class = ShipmentListPagination
     serializer_class = ShipmentSerializer
+    authentication_classes = TokenAuthentication
     queryset = Shipment.objects.all()
 
     def get_queryset(self):
         print(self.request.query_params)
-        filter_object = Shipment.objects.all()
+        filter_object = Shipment.objects.filter(shop=self.request.user.shop)
 
         if 'fulfilment_method' in self.request.query_params:
             print("yes the condition is True")
