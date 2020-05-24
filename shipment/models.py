@@ -17,9 +17,9 @@ class Shipment(TimeStampedModel):
     shipment_reference = models.CharField(max_length=50, null=True)
     fulfilment_method = models.CharField(max_length=7, null=True)
     shipment_items = jsonfield.JSONField()
-    transport = jsonfield.JSONField()
+    transport = jsonfield.JSONField(null=True)
     customer_details = jsonfield.JSONField()
-    billing_details = jsonfield.JSONField()
+    billing_details = jsonfield.JSONField(null=True)
 
     class Meta:
         db_table = 'shipment'

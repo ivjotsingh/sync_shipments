@@ -15,7 +15,11 @@ def sync_shipments_async(shop):
     pass
 
 
-class ShipmentSync():
+def sync_all_shipments():
+    pass
+
+
+class ShipmentSync:
     def __init__(self, shop):
         self.shop = shop
 
@@ -39,16 +43,17 @@ class ShipmentSync():
                     refresh_access_token(shop=self.shop)
 
                 elif response_data.get('status') == 429:
+                    print("sleeping in sync_shipment_by_id for 60 seconds")
                     time.sleep(60)
                 else:
                     shipment = Shipment.objects.create(shipment_id=response_data['shipmentId'],
                                                        pick_up_point=response_data['pickUpPoint'],
                                                        shipment_date=response_data['shipmentDate'],
-                                                       shipment_reference=response_data['shipmentReference'],
+                                                       shipment_reference=response_data.get('shipmentReference', None),
                                                        shipment_items=response_data['shipmentItems'],
                                                        transport=response_data['transport'],
                                                        customer_details=response_data['customerDetails'],
-                                                       billing_details=response_data['billingDetails'],
+                                                       billing_details=response_data.get('billingDetails', None),
                                                        shop=self.shop,
                                                        fulfilment_method=response_data['shipmentItems'][0]
                                                        ['fulfilmentMethod'])
@@ -58,6 +63,10 @@ class ShipmentSync():
             except Exception as e:
                 # todo [IV] log exception
                 print(e)
+                raise Exception
+
+    def confirm_complete_sync(self):
+        pass
 
     def sync_all_shipments(self):
         all_shipments = []
@@ -81,6 +90,7 @@ class ShipmentSync():
                         break
 
                     elif response_data.get('status') == 429:
+                        print("sleeping in sync all shipments for 60 seconds")
                         time.sleep(60)
                         break
                     else:
@@ -94,6 +104,7 @@ class ShipmentSync():
             except Exception as e:
                 # todo [IV] log exception
                 print(e)
+                raise Exception
             break
         for i in range(0, len(all_shipments), 5):
             with concurrent.futures.ThreadPoolExecutor() as executor:
