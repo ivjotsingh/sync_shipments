@@ -6,7 +6,7 @@ from rest_framework import status
 from retailer.helpers import get_access_token
 from retailer.models import Shop
 
-from shipment.helpers import sync_all_shipments
+from shipment.helpers import sync_all_shipments, sync_shipments_async
 # Create your views here.
 
 
@@ -36,7 +36,7 @@ class ShopCredentials(APIView):
             if access_token:
                 shop = Shop.objects.create(name=name, client_id=client_id, client_secret=client_secret,
                                            access_token=access_token)
-                sync_all_shipments(access_token=shop.access_token)
+                sync_shipments_async(shop=shop)
                 return Response({"message": "shop credentials registered and shipments will be synced"},
                                 status=status.HTTP_200_OK)
             else:

@@ -1,14 +1,12 @@
-def two_retry():
-    success = False
-    for _ in range(2):
-        if not success:
-            try:
-                print(5/1)
+x = [1,6,3,7,2,4,5,8,9,10]
 
-                success = True
-                print("yes")
-            except Exception as e:
-                print(e)
+print(len(x))
+counter = 0
+for i in range(0,10,3):
+    chunk = x[i:i+3]
+    print(chunk)
+    for ele in chunk:
+        counter +=1
+        print(ele)
 
-
-two_retry()
+print(counter)
