@@ -2,17 +2,34 @@ import time
 import requests
 import json
 import concurrent.futures
+import pika, os, logging
+
+from decouple import config
 
 from retailer.helpers import refresh_access_token
 from shipment.models import Shipment
 
-
-def get_shipment_ids():
-    pass
+#from boloo_env_helper import boloo_env
+logging.basicConfig()
 
 
 def sync_shipments_async(shop):
-    pass
+    # method defined is used to sync all the shipments
+    url = config('CLOUDAMQP_URL')
+    print(f'URL {url}')
+    params = pika.URLParameters(url)
+    params.socket_timeout = 5
+
+    connection = pika.BlockingConnection(params)  # Connect to CloudAMQP
+    channel = connection.channel()  # start a channel
+    channel.queue_declare(queue='shipments_sync')  # Declare a queue
+    # send a message
+    body = {
+        'shop_id': str(shop.id)
+    }
+    channel.basic_publish(exchange='', routing_key='shipments_sync', body=json.dumps(body))
+    print("[x] Message sent to consumer")
+    connection.close()
 
 
 def sync_all_shipments():

@@ -5,3 +5,5 @@ requests==2.23.0
 ipython==7.14.0
 pipenv==2018.11.26
 pika==1.1.0
+django-environ==0.4.5
+python-decouple==3.3
