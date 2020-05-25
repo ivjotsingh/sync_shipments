@@ -1,5 +1,5 @@
-# example_consumer.py
-import pika, os, time, json, environ, django
+import pika, os, json, environ, django
+
 from decouple import config
 
 environ.Env.read_env()
