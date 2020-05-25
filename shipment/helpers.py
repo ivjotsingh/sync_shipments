@@ -2,32 +2,19 @@ import time
 import requests
 import json
 import concurrent.futures
-import pika
 
-from decouple import config
-
-from retailer.helpers import refresh_access_token
 from shipment.models import Shipment
+
 from utilities.loggers import logger as log
+from utilities.exceptions import TooManyRequestsException
+from utilities.communication import send_async_message
 
 
 def sync_shipments_async(shop):
-    # method defined is used to sync all the shipments
-    url = config('CLOUDAMQP_URL')
-    log.info(f'URL {url}')
-    params = pika.URLParameters(url)
-    params.socket_timeout = 5
-
-    connection = pika.BlockingConnection(params)  # Connect to CloudAMQP
-    channel = connection.channel()  # start a channel
-    channel.queue_declare(queue='shipments_sync')  # Declare a queue
-    # send a message
     body = {
         'shop_id': str(shop.id)
     }
-    channel.basic_publish(exchange='', routing_key='shipments_sync', body=json.dumps(body))
-    log.info("[x] Message sent to consumer")
-    connection.close()
+    send_async_message(message=json.dumps(body), queue_name='shipments_sync', routing_key='shipments_sync')
 
 
 class ShipmentSync:
@@ -52,7 +39,8 @@ class ShipmentSync:
 
                 if response_data.get('status') == 429:
                     log.info("sleeping in sync_shipment_by_id for 60 seconds")
-                    time.sleep(60)
+                    raise TooManyRequestsException
+
                 else:
                     shipment = Shipment.objects.create(shipment_id=response_data['shipmentId'],
                                                        pick_up_point=response_data['pickUpPoint'],
@@ -67,6 +55,10 @@ class ShipmentSync:
                                                        ['fulfilmentMethod'])
                     log.info(f"{shipment.shipment_id} synced")
                     break
+
+            except TooManyRequestsException as e:
+                time.sleep(60)
+                continue
 
             except Exception as e:
                 log.info(e)
@@ -91,14 +83,8 @@ class ShipmentSync:
                     response = requests.get(shipment_url, headers=headers)
                     response_data = json.loads(response._content)
 
-                    if response_data.get('title', '') == 'Expired JWT' and response_data.get('status') == 401:
-                        refresh_access_token(shop=self.shop)
-                        continue
-
-                    elif response_data.get('status') == 429:
-                        log.info("sleeping in sync all shipments for 60 seconds")
-                        time.sleep(60)
-                        break
+                    if response_data.get('status') == 429:
+                        raise TooManyRequestsException
                     else:
                         if response_data != {}:
                             for shipment in response_data['shipments']:
@@ -107,11 +93,18 @@ class ShipmentSync:
                             page += 1
                         else:
                             break
+                break
+            except TooManyRequestsException:
+                log.info("sleeping in sync all shipments for 60 seconds")
+                time.sleep(60)
+                continue
+
             except Exception as e:
                 # todo [IV] log exception
                 log.info(e)
-                raise Exception
-            break
+                break
+
+        # syncing shipments in chunk of 5
         for i in range(0, len(all_shipments), 5):
             with concurrent.futures.ThreadPoolExecutor() as executor:
                 shipment_ids_chunk = all_shipments[i:i + 5]
