@@ -74,7 +74,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'boloo_sync.wsgi.application'
-
+AUTH_USER_MODEL = 'retailer.User'
 
 # Database
 # https://docs.djangoproject.com/en/3.0/ref/settings/#databases

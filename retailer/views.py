@@ -4,7 +4,7 @@ from rest_framework import status
 
 
 from retailer.helpers import get_access_token
-from retailer.models import Shop, BolooUser
+from retailer.models import Shop, User
 
 from shipment.helpers import sync_all_shipments, sync_shipments_async
 # Create your views here.
@@ -36,7 +36,7 @@ class ShopCredentials(APIView):
             if access_token:
                 shop = Shop.objects.create(name=shop_name, client_id=client_id, client_secret=client_secret,
                                            access_token=access_token)
-                user = BolooUser.objects.create(email=request.data['email'], shop=shop)
+                user = User.objects.create(email=request.data['email'], shop=shop)
                 user.set_password(request.data['password'])
                 user.save()
 

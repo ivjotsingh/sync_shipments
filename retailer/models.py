@@ -4,14 +4,14 @@ from django_extensions.db.models import TimeStampedModel
 from django.contrib.auth.models import AbstractUser
 
 
-class BolooUser(AbstractUser):
-    shop = models.ForeignKey("retailer.Shop", on_delete=models.CASCADE, null=True)
+class User(AbstractUser):
+    shop = models.ForeignKey("retailer.Shop", on_delete=models.CASCADE, null=True, related_name='user')
 
     def __str__(self):
-        return self.username
+        return self.email
 
     class Meta:
-        db_table = 'boloo_user'
+        db_table = 'user'
 
 
 class Shop(TimeStampedModel):
