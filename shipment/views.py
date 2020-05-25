@@ -12,14 +12,13 @@ class ShipmentView(viewsets.ReadOnlyModelViewSet):
     queryset = Shipment.objects.all()
 
     def get_queryset(self):
-        print(self.request.query_params)
-        print(self.request.user.email)
-        filter_object = Shipment.objects.filter(shop=self.request.user.shop)
-        # filter_object = Shipment.objects.filter()
+        if str(self.request.user) == 'AnonymousUser':
+            # only authenticated users gets the data associated with user's shop
+            filter_object = Shipment.objects.filter(shop=None)
+        else:
+            filter_object = Shipment.objects.filter(shop=self.request.user.shop)
 
         if 'fulfilment_method' in self.request.query_params:
-            print("yes the condition is True")
-            print(self.request.query_params['fulfilment_method'])
             filter_object = filter_object.filter(fulfilment_method=self.request.query_params['fulfilment_method'])
 
         return filter_object
