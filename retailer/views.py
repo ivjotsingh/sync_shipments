@@ -59,6 +59,6 @@ class ObtainAuthTokenView(APIView):
         user = User.objects.get(email=email)
 
         if check_password(password, user.password):
-            return Response({"access_token": str(Token)}, status=status.HTTP_200_OK)
+            return Response({"access_token": str(Token.objects.get(user=user))}, status=status.HTTP_200_OK)
         else:
             return Response({"message": "Email id and password doesn't matched"}, status=status.HTTP_400_BAD_REQUEST)
