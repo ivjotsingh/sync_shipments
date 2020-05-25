@@ -1,6 +1,8 @@
 import requests
 import json
 
+from utilities.loggers import logger as log
+
 
 def get_access_token(client_id, client_secret):
     try:
@@ -15,6 +17,7 @@ def get_access_token(client_id, client_secret):
         return resp.json()['access_token'], 'access_token fetched'
     except Exception as e:
         response = json.loads(e.response._content)
+        log.error(msg=f"unable to get access token, issue: {response['error_description']}")
         return None, response['error_description']
 
 
@@ -32,6 +35,6 @@ def refresh_access_token(shop):
         shop.save()
         return True
     except Exception as e:
-        # todo[iv] logging
+        log.error(msg=f'unale to refresh access token, issue: {e}')
         return False
 

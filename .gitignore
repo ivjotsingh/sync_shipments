@@ -1,4 +1,7 @@
 .i*
+.en*
 pro*
 manage.py*
 db*
+*__pycache_*
+.env*
