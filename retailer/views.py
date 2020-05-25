@@ -8,13 +8,13 @@ from retailer.helpers import get_access_token
 from retailer.models import Shop, User
 from rest_framework.authtoken.models import Token
 
-from shipment.helpers import sync_all_shipments, sync_shipments_async
-# Create your views here.
+from shipment.helpers import sync_shipments_async
+from utilities.loggers import logger as log
 
 
 class TestView(APIView):
     def get(self, request):
-        print(request.data)
+        log.info("API is hitting")
         return Response({"hey": "message"}, status=status.HTTP_200_OK)
 
 
