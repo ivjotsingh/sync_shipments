@@ -9,14 +9,15 @@ django.setup()
 
 from shipment.helpers import ShipmentSync
 from retailer.models import Shop
+from utilities.loggers import logger as log
 
 
 def sync_shipments(msg):
-    print(" [x] Received " + str(msg))
+    log.info(" [x] Received " + str(msg))
     shop_id = json.loads(msg)['shop_id']
     sync = ShipmentSync(Shop.objects.get(id=shop_id))
     sync.sync_all_shipments()
-    print("Shipments sync finished")
+    log.info("Shipments sync finished")
     return
 
 

@@ -2,21 +2,19 @@ import time
 import requests
 import json
 import concurrent.futures
-import pika, os, logging
+import pika
 
 from decouple import config
 
 from retailer.helpers import refresh_access_token
 from shipment.models import Shipment
-
-#from boloo_env_helper import boloo_env
-logging.basicConfig()
+from utilities.loggers import logger as log
 
 
 def sync_shipments_async(shop):
     # method defined is used to sync all the shipments
     url = config('CLOUDAMQP_URL')
-    print(f'URL {url}')
+    log.info(f'URL {url}')
     params = pika.URLParameters(url)
     params.socket_timeout = 5
 
@@ -28,12 +26,8 @@ def sync_shipments_async(shop):
         'shop_id': str(shop.id)
     }
     channel.basic_publish(exchange='', routing_key='shipments_sync', body=json.dumps(body))
-    print("[x] Message sent to consumer")
+    log.info("[x] Message sent to consumer")
     connection.close()
-
-
-def sync_all_shipments():
-    pass
 
 
 class ShipmentSync:
@@ -44,7 +38,7 @@ class ShipmentSync:
         for _ in range(5):
             try:
                 if Shipment.objects.filter(shipment_id=shipment_id).exists():
-                    print("already")
+                    log.info("already")
                     break
 
                 shipment_url = f"https://api.bol.com/retailer/shipments/{shipment_id}"
@@ -56,11 +50,8 @@ class ShipmentSync:
                 response = requests.get(shipment_url, headers=headers)
                 response_data = json.loads(response._content)
 
-                if response_data.get('title', '') == 'Expired JWT' and response_data.get('status') == 401:
-                    refresh_access_token(shop=self.shop)
-
-                elif response_data.get('status') == 429:
-                    print("sleeping in sync_shipment_by_id for 60 seconds")
+                if response_data.get('status') == 429:
+                    log.info("sleeping in sync_shipment_by_id for 60 seconds")
                     time.sleep(60)
                 else:
                     shipment = Shipment.objects.create(shipment_id=response_data['shipmentId'],
@@ -74,13 +65,11 @@ class ShipmentSync:
                                                        shop=self.shop,
                                                        fulfilment_method=response_data['shipmentItems'][0]
                                                        ['fulfilmentMethod'])
-                    print(f"{shipment.shipment_id} synced")
+                    log.info(f"{shipment.shipment_id} synced")
                     break
 
             except Exception as e:
-                # todo [IV] log exception
-                print(e)
-                raise Exception
+                log.info(e)
 
     def confirm_complete_sync(self):
         pass
@@ -89,10 +78,10 @@ class ShipmentSync:
         all_shipments = []
         for i in range(5):
             try:
-                print(f'iteration {i}')
+                log.info(f'iteration {i}')
                 page = 1
                 while True:
-                    print("response data != {}")
+                    log.info("response data != {}")
                     shipment_url = f"https://api.bol.com/retailer/shipments?page={page}"
                     headers = {
                         "Authorization": f"Bearer {self.shop.access_token}",
@@ -107,20 +96,20 @@ class ShipmentSync:
                         continue
 
                     elif response_data.get('status') == 429:
-                        print("sleeping in sync all shipments for 60 seconds")
+                        log.info("sleeping in sync all shipments for 60 seconds")
                         time.sleep(60)
                         break
                     else:
                         if response_data != {}:
                             for shipment in response_data['shipments']:
                                 all_shipments.append(shipment['shipmentId'])
-                                print(shipment['shipmentId'])
+                                log.info(shipment['shipmentId'])
                             page += 1
                         else:
                             break
             except Exception as e:
                 # todo [IV] log exception
-                print(e)
+                log.info(e)
                 raise Exception
             break
         for i in range(0, len(all_shipments), 5):

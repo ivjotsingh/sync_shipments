@@ -1,5 +1,6 @@
 import requests
 import json
+import datetime
 
 from utilities.loggers import logger as log
 
@@ -31,9 +32,12 @@ def refresh_access_token(shop):
         }
         resp = requests.post(login_url + "/token", auth=(shop.client_id, shop.client_secret), data=data)
         resp.raise_for_status()
-        shop.access_token = resp.json()['access_token']
+        shop.stored_access_token = resp.json()['access_token']
+        delta = datetime.timedelta(minutes=5)
+        now = datetime.datetime.now()
+        shop.access_token_ttl = now + delta
         shop.save()
-        return True
+        return resp.json()['access_token']
     except Exception as e:
         log.error(msg=f'unale to refresh access token, issue: {e}')
         return False
