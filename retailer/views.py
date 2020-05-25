@@ -1,10 +1,12 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from django.contrib.auth.hashers import check_password
 
 
 from retailer.helpers import get_access_token
 from retailer.models import Shop, User
+from rest_framework.authtoken.models import Token
 
 from shipment.helpers import sync_all_shipments, sync_shipments_async
 # Create your views here.
@@ -49,3 +51,16 @@ class ShopCredentials(APIView):
         except Exception as e:
             # todo [IV] add logging
             print(e)
+
+
+class ObtainAuthTokenView(APIView):
+    def post(self, request):
+        email = request.data['email']
+        password = request.data['password']
+
+        user = User.objects.get(email=email)
+
+        if check_password(password, user.password):
+            return Response({"access_token": str(Token)}, status=status.HTTP_200_OK)
+        else:
+            return Response({"message": "Email id and password doesn't matched"}, status=status.HTTP_400_BAD_REQUEST)

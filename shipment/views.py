@@ -8,12 +8,14 @@ from rest_framework.authentication import TokenAuthentication
 class ShipmentView(viewsets.ReadOnlyModelViewSet):
     pagination_class = ShipmentListPagination
     serializer_class = ShipmentSerializer
-    authentication_classes = TokenAuthentication
+    authentication_classes = [TokenAuthentication, ]
     queryset = Shipment.objects.all()
 
     def get_queryset(self):
         print(self.request.query_params)
+        print(self.request.user.email)
         filter_object = Shipment.objects.filter(shop=self.request.user.shop)
+        # filter_object = Shipment.objects.filter()
 
         if 'fulfilment_method' in self.request.query_params:
             print("yes the condition is True")
