@@ -26,7 +26,7 @@ url = config('CLOUDAMQP_URL')
 params = pika.URLParameters(url)
 connection = pika.BlockingConnection(params)
 channel = connection.channel() # start a channel
-channel.queue_declare(queue='shipments_sync') # Declare a queue
+channel.queue_declare(queue='shipment_queue') # Declare a queue
 
 
 # create a function which is called on incoming messages
@@ -35,7 +35,7 @@ def callback(ch, method, properties, body):
 
 
 # set up subscription on the queue
-channel.basic_consume('shipments_sync', callback, auto_ack=True)
+channel.basic_consume('shipment_queue', callback, auto_ack=True)
 
 
 # start consuming (blocks)

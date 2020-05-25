@@ -1,4 +1,5 @@
 import datetime
+import pytz
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -38,7 +39,8 @@ class ShopCredentials(APIView):
             access_token, message = get_access_token(client_id=client_id, client_secret=client_secret)
             if access_token:
                 delta = datetime.timedelta(minutes=5)
-                now = datetime.datetime.now()
+                now = datetime.datetime.utcnow()
+                now = now.replace(tzinfo=pytz.utc)
                 access_token_ttl = now + delta
                 shop = Shop.objects.create(name=shop_name, client_id=client_id, client_secret=client_secret,
                                            stored_access_token=access_token, access_token_ttl=access_token_ttl)

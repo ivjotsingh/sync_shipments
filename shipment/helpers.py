@@ -14,7 +14,7 @@ def sync_shipments_async(shop):
     body = {
         'shop_id': str(shop.id)
     }
-    send_async_message(message=json.dumps(body), queue_name='shipments_sync', routing_key='shipments_sync')
+    send_async_message(message=json.dumps(body), queue_name='shipment_queue', routing_key='shipment_queue')
 
 
 class ShipmentSync:
@@ -25,7 +25,7 @@ class ShipmentSync:
         for _ in range(5):
             try:
                 if Shipment.objects.filter(shipment_id=shipment_id).exists():
-                    log.info("already")
+                    log.info("Shipment Already exists in the database")
                     break
 
                 shipment_url = f"https://api.bol.com/retailer/shipments/{shipment_id}"
@@ -56,23 +56,21 @@ class ShipmentSync:
                     log.info(f"{shipment.shipment_id} synced")
                     break
 
-            except TooManyRequestsException as e:
+            except TooManyRequestsException:
                 time.sleep(60)
                 continue
 
             except Exception as e:
-                log.info(e)
-
-    def confirm_complete_sync(self):
-        pass
+                log.exception(e)
 
     def sync_all_shipments(self):
         all_shipments = []
         for i in range(5):
-            try:
-                log.info(f'iteration {i}')
-                page = 1
-                while True:
+            page = 1
+            all_shipments_collected = False
+            while True:
+                try:
+                    log.info(f'iteration {i}')
                     log.info("response data != {}")
                     shipment_url = f"https://api.bol.com/retailer/shipments?page={page}"
                     headers = {
@@ -92,16 +90,18 @@ class ShipmentSync:
                                 log.info(shipment['shipmentId'])
                             page += 1
                         else:
+                            all_shipments_collected = True
                             break
-                break
-            except TooManyRequestsException:
-                log.info("sleeping in sync all shipments for 60 seconds")
-                time.sleep(60)
-                continue
 
-            except Exception as e:
-                # todo [IV] log exception
-                log.info(e)
+                except TooManyRequestsException:
+                    log.info("sleeping in sync all shipments for 60 seconds")
+                    time.sleep(60)
+                    continue
+
+                except Exception as e:
+                    log.exception(e)
+                    break
+            if all_shipments_collected:
                 break
 
         # syncing shipments in chunk of 5

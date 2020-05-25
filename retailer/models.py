@@ -1,9 +1,12 @@
 import uuid
 import datetime
+import pytz
 
 from django.db import models
 from django_extensions.db.models import TimeStampedModel
 from django.contrib.auth.models import AbstractUser
+
+from retailer.helpers import refresh_access_token
 
 
 class User(AbstractUser):
@@ -26,9 +29,9 @@ class Shop(TimeStampedModel):
 
     @property
     def access_token(self):
-        from shipment.helpers import refresh_access_token
-
-        if datetime.datetime.now() > self.access_token_ttl:
+        now = datetime.datetime.utcnow()
+        now = now.replace(tzinfo=pytz.utc)
+        if now > self.access_token_ttl:
             return refresh_access_token(self)
         else:
             return self.stored_access_token
