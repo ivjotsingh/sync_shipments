@@ -5,3 +5,5 @@ manage.py*
 db*
 *__pycache_*
 .env*
+shipment/__pycach*
+retailer/__pycach*
