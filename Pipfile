@@ -11,7 +11,7 @@ django-extensions = "==2.2.9"
 django-jsonfield = "==1.4.0"
 requests = "==2.23.0"
 ipython = "==7.14.0"
-pipenv = "==2018.11.26"
+pipenv = "==2022.1.8"
 
 [requires]
 python_version = "3.6"
